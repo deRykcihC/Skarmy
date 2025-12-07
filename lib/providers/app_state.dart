@@ -60,10 +60,10 @@ class AppState extends ChangeNotifier {
   int get dailyRequestCount => _dailyRequestCount;
 
   // Models
-  String _primaryModel = 'gemini-2.0-flash';
+  String _primaryModel = 'gemini-2.0-flash-lite';
   String get primaryModel => _primaryModel;
 
-  String _fallbackModel = 'gemini-2.0-flash-lite';
+  String _fallbackModel = 'gemini-2.0-flash';
   String get fallbackModel => _fallbackModel;
 
   Future<void> setModels(String primary, String fallback) async {
@@ -83,9 +83,9 @@ class AppState extends ChangeNotifier {
 
     // Load models
     _primaryModel =
-        prefs.getString('gemini_primary_model') ?? 'gemini-2.0-flash';
+        prefs.getString('gemini_primary_model') ?? 'gemini-2.0-flash-lite';
     _fallbackModel =
-        prefs.getString('gemini_fallback_model') ?? 'gemini-2.0-flash-lite';
+        prefs.getString('gemini_fallback_model') ?? 'gemini-2.0-flash';
 
     // Daily Limit Logic
     final lastDate = prefs.getString('daily_usage_date');
@@ -179,8 +179,7 @@ class AppState extends ChangeNotifier {
 
       // Priority 1: Selected Folder (File Manager)
       if (_selectedFolderPath != null) {
-        final hasPerm =
-            true; // File picker usually grants permission to the picked folder URI, but raw path access might need storage perm
+        // File picker usually grants permission to the picked folder URI, but raw path access might need storage perm
         // Try to load
         newScreenshots = await _galleryService.getImagesFromDirectory(
           _selectedFolderPath!,
@@ -377,7 +376,7 @@ class AppState extends ChangeNotifier {
       await analyzeScreenshot(s);
 
       if (i < failed.length - 1) {
-        await Future.delayed(const Duration(seconds: 5)); //
+        await Future.delayed(const Duration(seconds: 5));
       }
     }
     _isRetrying = false;

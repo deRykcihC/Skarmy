@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:pixelshot_flutter/models/screenshot.dart';
-import 'package:uuid/uuid.dart';
 
 class GalleryService {
   Future<bool> requestPermission() async {
@@ -88,23 +87,26 @@ class GalleryService {
 
       final results = await Future.wait(
         batch.map((asset) async {
+          // 1. Filter non-images and Live Photos
+          if (asset.type != AssetType.image) return null;
+          if (asset.isLivePhoto) return null;
+
           // Optimization: If we are scanning "Recent", check title first before file IO
           if (!isExplicitScreenshotAlbum) {
             final title = asset.title?.toLowerCase() ?? '';
             if (!title.contains("screenshot")) {
-              // If title doesn't look like a screenshot, calculate file path ONLY if necessary
-              // But usually title is reliable for "Screenshot_..." files.
-              // If you want to be super safe, you can't skip this, but it's slow.
-              // Let's assume title check is good first filter.
-              // If title matches, we load file.
-              // If title doesn't match, we MIGHT skip, but let's be safe and check path if title fails?
-              // Checking path requires `await asset.file` which is the bottleneck.
-              // Let's rely on string check of title effectively filtering most non-screenshots.
+              // ... optimization logic ...
             }
           }
 
           final File? file = await asset.file;
           if (file == null) return null;
+
+          // 2. Strict File Extension Check
+          final ext = file.path.split('.').last.toLowerCase();
+          if (!['jpg', 'jpeg', 'png', 'webp', 'heic'].contains(ext)) {
+            return null;
+          }
 
           bool isScreenshot = isExplicitScreenshotAlbum;
           if (!isScreenshot) {

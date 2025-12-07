@@ -44,18 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 1/100 Chance Easter Egg
     if (Random().nextInt(100) == 0) {
-      const easterEggs = [
-        "Why do we have so many screenshots?",
-        "Looking for that one meme?",
-        "I swear I'll delete these later...",
-        "Digital hoarding is real.",
-        "Skarmy watching you...",
-        "Capture everything!",
-        "Searching for the meaning of life?",
-        "Is this a screenshot or a photo?",
-        "Pixels, pixels everywhere.",
-        "Remember that thing you saved?",
-      ];
+      const easterEggs = ["cream pound", "telegram seen", "i love skarm"];
       _searchHint = easterEggs[Random().nextInt(easterEggs.length)];
     }
   }
@@ -378,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 32),
                             child: Text(
-                              "Upload manually or enable Native Sync in Profile.",
+                              "Select the folder where your screenshots are stored.",
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.blueGrey),
                             ),
