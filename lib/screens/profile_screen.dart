@@ -1,0 +1,498 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pixelshot_flutter/screens/home_screen.dart';
+
+import '../providers/app_state.dart';
+import 'package:file_picker/file_picker.dart';
+
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final TextEditingController _apiKeyController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _apiKeyController.text = context.read<AppState>().apiKey;
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Custom Header
+              Row(
+                children: [
+                  const Text(
+                    'Settings',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF0D1B2A),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Stats
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatCard(
+                      "Daily Quota (Est.)",
+                      "${state.dailyRequestCount}",
+                      Colors.blue,
+                      isQuota: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildStatCard(
+                      "Total",
+                      state.screenshots.length.toString(),
+                      Colors.purple,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                "APP SETTINGS",
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Source Folder Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.folder_open,
+                            color: Colors.orange.shade700,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Source Folder",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Where to look for screenshots",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Selection UI
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            state.selectedFolderPath ??
+                                (state.selectedAlbum != null
+                                    ? "Album: ${state.selectedAlbum!.name}"
+                                    : "Auto-detect (Screenshots/Recent)"),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blueGrey.shade800,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    String? selectedDirectory = await FilePicker
+                                        .platform
+                                        .getDirectoryPath();
+                                    if (selectedDirectory != null) {
+                                      state.selectFolder(selectedDirectory);
+                                    }
+                                  },
+                                  icon: const Icon(Icons.folder, size: 16),
+                                  label: const Text("Pick Folder"),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.blue,
+                                    elevation: 0,
+                                    side: BorderSide(
+                                      color: Colors.blue.shade200,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 0,
+                                      horizontal: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (state.selectedFolderPath != null ||
+                                  state.selectedAlbum != null) ...[
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  onPressed: () {
+                                    state.selectFolder(null); // Reset to auto
+                                  },
+                                  icon: const Icon(Icons.restart_alt),
+                                  tooltip: "Reset to Auto",
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: Colors.grey.shade200,
+                                    foregroundColor: Colors.grey.shade700,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              const SizedBox(height: 16),
+
+              // Model Selection Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.psychology,
+                            color: Colors.purple.shade700,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "AI Models",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "Choose primary & fallback",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Primary Model
+                    _buildModelDropdown(
+                      label: "Primary Model",
+                      value: state.primaryModel,
+                      items: [
+                        'gemini-2.5-flash',
+                        'gemini-2.5-flash-lite',
+                        'gemini-2.0-flash',
+                        'gemini-2.0-flash-lite',
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          state.setModels(val, state.fallbackModel);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // Fallback Model
+                    _buildModelDropdown(
+                      label: "Fallback Model",
+                      value: state.fallbackModel,
+                      items: [
+                        'gemini-2.5-flash',
+                        'gemini-2.5-flash-lite',
+                        'gemini-2.0-flash',
+                        'gemini-2.0-flash-lite',
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          state.setModels(state.primaryModel, val);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // API Key
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: state.apiKey.isNotEmpty
+                                ? Colors.green.shade100
+                                : Colors.red.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.key,
+                            color: state.apiKey.isNotEmpty
+                                ? Colors.green.shade700
+                                : Colors.red.shade700,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Gemini API Key",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "Required for analysis",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _apiKeyController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        hintText: "Paste your API Key here",
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      onChanged: (val) => state.setApiKey(val),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 1,
+        onDestinationSelected: (index) {
+          if (index == 0) {
+            Navigator.of(context).pushReplacement(
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => const HomeScreen(),
+                transitionDuration: Duration.zero,
+              ),
+            );
+          }
+        },
+        backgroundColor: Colors.white,
+        indicatorColor: Colors.blue.shade100,
+        surfaceTintColor: Colors.transparent,
+        height: 60,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home, color: Color(0xFF0D1B2A)),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings, color: Color(0xFF0D1B2A)),
+            label: 'Settings',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(
+    String label,
+    String value,
+    Color color, {
+    bool isQuota = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isQuota ? Icons.pie_chart : Icons.bar_chart,
+                size: 16,
+                color: color,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModelDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.blueGrey.shade700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: items.contains(value) ? value : items.first,
+              isExpanded: true,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.blueGrey.shade900,
+                fontWeight: FontWeight.w500,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              items: items.map((String item) {
+                return DropdownMenuItem<String>(value: item, child: Text(item));
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
