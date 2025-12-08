@@ -67,6 +67,15 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Row(
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/icon/app_icon.png',
+                      width: 32,
+                      height: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   const Text(
                     'Skarmy',
                     style: TextStyle(

@@ -7,8 +7,8 @@ class GeminiService {
   Future<Screenshot> analyzeScreenshot(
     File file,
     String apiKey, {
-    String primaryModel = 'gemini-2.0-flash',
-    String fallbackModel = 'gemini-2.0-flash-lite',
+    String primaryModel = 'gemini-2.5-flash-lite',
+    String fallbackModel = 'gemini-2.5-flash',
   }) async {
     // Helper to perform analysis with a specific model
     Future<Screenshot> attemptAnalysis(String modelName) async {
@@ -25,10 +25,15 @@ class GeminiService {
       final text = response.text;
       if (text == null) throw Exception("No response from Gemini");
 
-      String jsonStr = text
-          .replaceAll('```json', '')
-          .replaceAll('```', '')
-          .trim();
+      String jsonStr = text;
+      final startIndex = jsonStr.indexOf('{');
+      final endIndex = jsonStr.lastIndexOf('}');
+
+      if (startIndex != -1 && endIndex != -1) {
+        jsonStr = jsonStr.substring(startIndex, endIndex + 1);
+      } else {
+        jsonStr = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      }
 
       Map<String, dynamic> jsonMap = {};
       try {

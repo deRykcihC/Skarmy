@@ -60,10 +60,10 @@ class AppState extends ChangeNotifier {
   int get dailyRequestCount => _dailyRequestCount;
 
   // Models
-  String _primaryModel = 'gemini-2.0-flash-lite';
+  String _primaryModel = 'gemini-2.5-flash-lite';
   String get primaryModel => _primaryModel;
 
-  String _fallbackModel = 'gemini-2.0-flash';
+  String _fallbackModel = 'gemini-2.5-flash';
   String get fallbackModel => _fallbackModel;
 
   Future<void> setModels(String primary, String fallback) async {
@@ -83,9 +83,9 @@ class AppState extends ChangeNotifier {
 
     // Load models
     _primaryModel =
-        prefs.getString('gemini_primary_model') ?? 'gemini-2.0-flash-lite';
+        prefs.getString('gemini_primary_model') ?? 'gemini-2.5-flash-lite';
     _fallbackModel =
-        prefs.getString('gemini_fallback_model') ?? 'gemini-2.0-flash';
+        prefs.getString('gemini_fallback_model') ?? 'gemini-2.5-flash';
 
     // Daily Limit Logic
     final lastDate = prefs.getString('daily_usage_date');
@@ -228,6 +228,7 @@ class AppState extends ChangeNotifier {
             category: cached['category'],
             tags: List<String>.from(cached['tags'] ?? []),
             analyzed: true,
+            note: cached['note'],
           );
         }
         return s;
@@ -275,6 +276,7 @@ class AppState extends ChangeNotifier {
         _screenshots[newIndex] = result.copyWith(
           id: screenshot.id,
           timestamp: screenshot.timestamp,
+          note: screenshot.note,
         );
 
         // Clear retry count on success
@@ -285,6 +287,7 @@ class AppState extends ChangeNotifier {
           'description': result.description,
           'category': result.category,
           'tags': result.tags,
+          'note': screenshot.note,
         };
         await _saveAnalysisCache();
         await _incrementDailyUsage(); // Track usage
@@ -381,5 +384,33 @@ class AppState extends ChangeNotifier {
     }
     _isRetrying = false;
     notifyListeners();
+  }
+
+  Future<void> updateScreenshotNote(String id, String note) async {
+    final index = _screenshots.indexWhere((s) => s.id == id);
+    if (index != -1) {
+      final s = _screenshots[index];
+      _screenshots[index] = s.copyWith(note: note);
+
+      // Update cache
+      if (_analysisCache.containsKey(id)) {
+        _analysisCache[id] = {..._analysisCache[id], 'note': note};
+      } else {
+        // If not analyzed yet, create a partial cache entry or just wait?
+        // Better to check if it exists or just force it.
+        // If it's not analyzed, maybe we shouldn't cache the full object yet,
+        // but 'note' should be meaningful.
+        // For now, let's assume we only cache analyzed items OR we start caching pending items too?
+        // Simpler: Just update the cache map if it exists, or create it.
+        _analysisCache[id] = {
+          'description': s.description,
+          'category': s.category,
+          'tags': s.tags,
+          'note': note,
+        };
+      }
+      await _saveAnalysisCache();
+      notifyListeners();
+    }
   }
 }

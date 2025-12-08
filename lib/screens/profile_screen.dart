@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pixelshot_flutter/screens/home_screen.dart';
@@ -36,13 +37,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Custom Header
               Row(
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      'assets/icon/app_icon.png',
+                      width: 32,
+                      height: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   const Text(
                     'Settings',
                     style: TextStyle(
@@ -266,10 +276,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       label: "Primary Model",
                       value: state.primaryModel,
                       items: [
-                        'gemini-2.5-flash',
                         'gemini-2.5-flash-lite',
+                        'gemini-2.5-flash',
                         'gemini-2.0-flash',
                         'gemini-2.0-flash-lite',
+                        'gemma-3-27b-it',
+                        'gemma-3-12b-it',
+                        'gemma-3-4b-it',
+                        'gemma-3-2b-it',
+                        'gemma-3-1b-it',
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -283,10 +298,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       label: "Fallback Model",
                       value: state.fallbackModel,
                       items: [
-                        'gemini-2.5-flash',
                         'gemini-2.5-flash-lite',
+                        'gemini-2.5-flash',
                         'gemini-2.0-flash',
                         'gemini-2.0-flash-lite',
+                        'gemma-3-27b-it',
+                        'gemma-3-12b-it',
+                        'gemma-3-4b-it',
+                        'gemma-3-2b-it',
+                        'gemma-3-1b-it',
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -429,16 +449,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  "Have bugs, feedback, or suggestions? Leave it in the GitHub repository!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.blueGrey,
-                    fontWeight: FontWeight.w500,
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text.rich(
+                  TextSpan(
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.blueGrey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    children: [
+                      const TextSpan(
+                        text:
+                            "Have bugs, feedback, or suggestions?\nLeave it in the ",
+                      ),
+                      TextSpan(
+                        text: "GitHub repository!",
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            _launchURL('https://github.com/deRykcihC/Skarmy');
+                          },
+                      ),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
@@ -557,7 +596,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               borderRadius: BorderRadius.circular(12),
               items: items.map((String item) {
-                return DropdownMenuItem<String>(value: item, child: Text(item));
+                final is20Model = item.contains('gemini-2.0');
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: is20Model
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.0,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "BILLED ONLY",
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.orange.shade800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Cheapest",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.green.shade600,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Text(item),
+                );
               }).toList(),
               onChanged: onChanged,
             ),

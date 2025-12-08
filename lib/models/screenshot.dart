@@ -8,6 +8,7 @@ class Screenshot {
   final String category;
   final bool analyzed;
   final DateTime? timestamp;
+  final String? note;
 
   Screenshot({
     required this.id,
@@ -17,6 +18,7 @@ class Screenshot {
     this.category = 'Pending',
     this.analyzed = false,
     this.timestamp,
+    this.note,
   });
 
   Screenshot copyWith({
@@ -27,6 +29,7 @@ class Screenshot {
     String? category,
     bool? analyzed,
     DateTime? timestamp,
+    String? note,
   }) {
     return Screenshot(
       id: id ?? this.id,
@@ -36,6 +39,7 @@ class Screenshot {
       category: category ?? this.category,
       analyzed: analyzed ?? this.analyzed,
       timestamp: timestamp ?? this.timestamp,
+      note: note ?? this.note,
     );
   }
 }
