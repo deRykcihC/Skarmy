@@ -480,6 +480,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    _launchURL(
+                      'https://github.com/deRykcihC/Skarmy/blob/main/PRIVACY_POLICY.md',
+                    );
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey.shade600,
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: const Text("Privacy Policy"),
+                ),
+              ),
             ],
           ),
         ),
