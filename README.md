@@ -12,11 +12,11 @@ It acts as an open-source alternative to Pixel Screenshots, letting you utilize 
 *   **Bring Your Own Key:** You control the API usage and limits.
 
 ## Why Gemini 2.0 Flash-Lite?
-I specifically utilize the **Gemini 2.0 Flash-Lite** model by default because:
+I specifically utilize the **Gemini 2.5 Flash-Lite** model by default because:
 1.  **High Free Quotas:** It offers significantly higher daily limits compared to Pro/Flash or Standard models.
 2.  **Efficiency:** It is lightweight and fast, providing more than sufficient intelligence for OCR and image tagging tasks without unnecessary latency.
 
-***SIKE*** they shut downed the 2.0 flash lite, please choose 2.5 models until further update
+***SIKE*** they limited the 2.0 flash lite for billed, please choose 2.5 models until further update
 
 ## Security & Privacy
 
