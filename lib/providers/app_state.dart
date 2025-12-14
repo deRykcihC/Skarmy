@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pixelshot_flutter/models/screenshot.dart';
 import 'package:pixelshot_flutter/services/gemini_service.dart';
 import 'package:pixelshot_flutter/services/gallery_service.dart';
+import 'package:pixelshot_flutter/services/encryption_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:photo_manager/photo_manager.dart';
@@ -98,7 +99,10 @@ class AppState extends ChangeNotifier {
       _dailyRequestCount = prefs.getInt('daily_usage_count') ?? 0;
     }
 
-    final cacheString = prefs.getString('analysis_cache');
+    String? cacheString = prefs.getString('analysis_cache');
+    if (cacheString != null) {
+      cacheString = EncryptionService.decryptData(cacheString);
+    }
     if (kDebugMode)
       print("Loaded cache string length: ${cacheString?.length ?? 0}");
 
@@ -342,7 +346,9 @@ class AppState extends ChangeNotifier {
 
   Future<void> _saveAnalysisCache() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('analysis_cache', json.encode(_analysisCache));
+    final plainJson = json.encode(_analysisCache);
+    final encrypted = EncryptionService.encryptData(plainJson);
+    await prefs.setString('analysis_cache', encrypted);
   }
 
   bool _isRetrying = false;
