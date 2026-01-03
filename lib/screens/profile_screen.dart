@@ -614,10 +614,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               borderRadius: BorderRadius.circular(12),
               items: items.map((String item) {
-                final is20Model = item.contains('gemini-2.0');
+                final isBilledModel = item.contains('gemini-2.0');
                 return DropdownMenuItem<String>(
                   value: item,
-                  child: is20Model
+                  child: isBilledModel
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -656,15 +656,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  "Cheapest",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.green.shade600,
-                                    fontWeight: FontWeight.w500,
+                                if (item == 'gemini-2.0-flash-lite') ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "Cheapest",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.green.shade600,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                           ],

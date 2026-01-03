@@ -3,7 +3,11 @@ import 'package:pixelshot_flutter/providers/app_state.dart';
 import 'package:provider/provider.dart';
 import 'package:pixelshot_flutter/screens/home_screen.dart';
 
-void main() {
+import 'package:pixelshot_flutter/services/background_service_manager.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await BackgroundServiceManager.initialize();
   runApp(const MyApp());
 }
 

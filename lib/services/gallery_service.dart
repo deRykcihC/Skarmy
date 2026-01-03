@@ -2,8 +2,15 @@ import 'dart:io';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:pixelshot_flutter/models/screenshot.dart';
 
+import 'package:permission_handler/permission_handler.dart';
+
 class GalleryService {
   Future<bool> requestPermission() async {
+    // Request notification permission for background service (Android 13+)
+    if (Platform.isAndroid) {
+      await Permission.notification.request();
+    }
+
     final PermissionState ps = await PhotoManager.requestPermissionExtend();
     return ps.isAuth;
   }
@@ -39,11 +46,33 @@ class GalleryService {
         print("Album found: ${p.name} ($count items)");
       }
 
-      // 1. Try "Screenshots" specifically
+      // 1. Try to find a dedicated Screenshot album
       try {
-        targetPath = paths.firstWhere(
-          (p) => p.name.toLowerCase().contains("screenshot"),
-        );
+        // Sort paths to prioritize explicit "Screenshots" name
+        paths.sort((a, b) {
+          final aName = a.name.toLowerCase();
+          final bName = b.name.toLowerCase();
+          
+          final aExact = aName == "screenshots" || aName == "screenshot";
+          final bExact = bName == "screenshots" || bName == "screenshot";
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+
+          final aContains = aName.contains("screenshot");
+          final bContains = bName.contains("screenshot");
+          if (aContains && !bContains) return -1;
+          if (!aContains && bContains) return 1;
+          
+          return 0;
+        });
+
+        targetPath = paths.firstWhere((p) {
+          final name = p.name.toLowerCase();
+          return name.contains("screenshot") ||
+              name.contains("captur") ||
+              name.contains("snip") ||
+              name == "screen";
+        });
         print("Using explicit Screenshot album: ${targetPath.name}");
       } catch (_) {
         // 2. Fallback to "Recent" (usually index 0)
@@ -61,7 +90,6 @@ class GalleryService {
     if (targetPath == null) return [];
 
     // Get assets
-    // Use a larger page size or just fetch a large chunk
     final List<AssetEntity> assets = await targetPath.getAssetListPaged(
       page: page,
       size: perPage,
@@ -72,12 +100,13 @@ class GalleryService {
     );
 
     final List<Screenshot> screenshots = [];
-    final isExplicitScreenshotAlbum = targetPath.name.toLowerCase().contains(
-      "screenshot",
-    );
+    final lowerName = targetPath.name.toLowerCase();
+    final isExplicitScreenshotAlbum =
+        lowerName.contains("screenshot") ||
+        lowerName.contains("captur") ||
+        lowerName.contains("snip");
 
-    // Process in batches to avoid choking the UI thread or IO
-    // But faster than sequential
+    // Process in batches
     const batchSize = 20;
     for (var i = 0; i < assets.length; i += batchSize) {
       final end = (i + batchSize < assets.length)
@@ -91,18 +120,45 @@ class GalleryService {
           if (asset.type != AssetType.image) return null;
           if (asset.isLivePhoto) return null;
 
-          // Optimization: If we are scanning "Recent", check title first before file IO
+          // 2. Fast Filter using Relative Path & Title (No IO)
+          // We want to skip OBVIOUS non-screenshots to save time, 
+          // but we must be careful not to skip real screenshots that are just in weird folders (like DCIM/Screenshot).
           if (!isExplicitScreenshotAlbum) {
+            final relPath = asset.relativePath?.toLowerCase();
             final title = asset.title?.toLowerCase() ?? '';
-            if (!title.contains("screenshot")) {
-              // ... optimization logic ...
+
+            if (relPath != null && relPath.isNotEmpty) {
+              final isScreenshotFolder =
+                  relPath.contains('screenshot') ||
+                  relPath.contains('captur') ||
+                  relPath.contains('snip');
+              
+              // Broaden search: Check DCIM/Pictures but exclude Camera to avoid massive scan
+              // Many screenshots are in DCIM/Screenshots
+              final isPotentialFolder = 
+                  relPath.contains('dcim') || 
+                  relPath.contains('pictures') ||
+                  relPath.contains('images');
+                  
+              final isCamera = relPath.contains('camera') || relPath.contains('100andro');
+
+              final looksLikeScreenshot =
+                  isScreenshotFolder ||
+                  (isPotentialFolder && !isCamera) ||
+                  title.contains('screenshot') ||
+                  title.contains('captur') ||
+                  title.contains('screen');
+
+              if (!looksLikeScreenshot) {
+                return null; // Skip it
+              }
             }
           }
 
           final File? file = await asset.file;
           if (file == null) return null;
 
-          // 2. Strict File Extension Check
+          // 3. Strict File Extension Check
           final ext = file.path.split('.').last.toLowerCase();
           if (!['jpg', 'jpeg', 'png', 'webp', 'heic'].contains(ext)) {
             return null;
@@ -111,11 +167,10 @@ class GalleryService {
           bool isScreenshot = isExplicitScreenshotAlbum;
           if (!isScreenshot) {
             final path = file.path.toLowerCase();
-            final title = asset.title?.toLowerCase() ?? '';
             isScreenshot =
-                title.contains("screenshot") ||
                 path.contains("screenshot") ||
-                path.contains("capture");
+                path.contains("captur") ||
+                path.contains("screen");
           }
 
           if (isScreenshot) {

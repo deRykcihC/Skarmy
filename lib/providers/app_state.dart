@@ -4,6 +4,7 @@ import 'package:pixelshot_flutter/models/screenshot.dart';
 import 'package:pixelshot_flutter/services/gemini_service.dart';
 import 'package:pixelshot_flutter/services/gallery_service.dart';
 import 'package:pixelshot_flutter/services/encryption_service.dart';
+import 'package:pixelshot_flutter/services/background_service_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:photo_manager/photo_manager.dart';
@@ -332,16 +333,38 @@ class AppState extends ChangeNotifier {
         .where((s) => !s.analyzed && s.category != 'Error')
         .toList();
 
+    if (pending.isNotEmpty) {
+      await BackgroundServiceManager.startService();
+      BackgroundServiceManager.updateNotificationContent(
+        "Analyzing 1/${pending.length} images...",
+      );
+    }
+
     // 15 RPM = 1 request every 4 seconds
     for (var i = 0; i < pending.length; i++) {
       if (_apiKey.isEmpty) break;
 
+      BackgroundServiceManager.updateNotificationContent(
+        "Analyzing ${i + 1}/${pending.length} images...",
+        progress: i + 1,
+        max: pending.length,
+      );
+
       await analyzeScreenshot(pending[i]);
 
       if (i < pending.length - 1) {
-        await Future.delayed(const Duration(seconds: 5)); // 12 RPM (Safe)
+        await Future.delayed(const Duration(seconds: 30)); // 2 RPM (Strict)
       }
     }
+    
+    // Stop if only this method was running, but we might chain retry
+    // Ideally we stop only if no retries pending, but for now stopping here is okay 
+    // as retryFailed will restart it if called.
+    // However, analyzeAll calls retryFailed at the end (in loadScreenshots chain).
+    // Let's NOT stop here if we assume retryFailed might follow.
+    // Actually, analyzeAll is called mainly from loadScreenshots...
+    // Let's just stop it, retryFailed will ensure it's started if needed.
+    await BackgroundServiceManager.stopService();
   }
 
   Future<void> _saveAnalysisCache() async {
@@ -373,11 +396,24 @@ class AppState extends ChangeNotifier {
       print("Retrying ${failed.length} failed items...");
     }
 
+    if (failed.isNotEmpty) {
+      await BackgroundServiceManager.startService();
+      BackgroundServiceManager.updateNotificationContent(
+        "Retrying 1/${failed.length} failed images...",
+      );
+    }
+
     for (var i = 0; i < failed.length; i++) {
       if (_apiKey.isEmpty) break;
 
       _retryCurrent = i + 1;
       notifyListeners();
+
+      BackgroundServiceManager.updateNotificationContent(
+        "Retrying ${i + 1}/${failed.length} failed images...",
+        progress: i + 1,
+        max: failed.length,
+      );
 
       final s = failed[i];
       if (kDebugMode) print("Retrying ${s.id} (${i + 1}/${failed.length})...");
@@ -385,10 +421,11 @@ class AppState extends ChangeNotifier {
       await analyzeScreenshot(s);
 
       if (i < failed.length - 1) {
-        await Future.delayed(const Duration(seconds: 5));
+        await Future.delayed(const Duration(seconds: 30));
       }
     }
     _isRetrying = false;
+    await BackgroundServiceManager.stopService();
     notifyListeners();
   }
 
