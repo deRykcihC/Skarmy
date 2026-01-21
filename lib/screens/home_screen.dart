@@ -30,6 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  String _logoPath = 'assets/icon/app_icon.png';
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +48,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (Random().nextInt(100) == 0) {
       const easterEggs = ["cream pound", "telegram seen", "i love skarm"];
       _searchHint = easterEggs[Random().nextInt(easterEggs.length)];
+    }
+
+    if (Random().nextInt(100) == 0) {
+      _logoPath = 'assets/icon/app_icon_rare.png';
     }
   }
 
@@ -69,11 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/icon/app_icon.png',
-                      width: 32,
-                      height: 32,
-                    ),
+                    child: Image.asset(_logoPath, width: 32, height: 32),
                   ),
                   const SizedBox(width: 12),
                   const Text(

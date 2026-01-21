@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,11 +18,16 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
+  String _logoPath = 'assets/icon/app_icon.png';
 
   @override
   void initState() {
     super.initState();
     _apiKeyController.text = context.read<AppState>().apiKey;
+
+    if (Random().nextInt(100) == 0) {
+      _logoPath = 'assets/icon/app_icon_rare.png';
+    }
   }
 
   @override
@@ -46,11 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/icon/app_icon.png',
-                      width: 32,
-                      height: 32,
-                    ),
+                    child: Image.asset(_logoPath, width: 32, height: 32),
                   ),
                   const SizedBox(width: 12),
                   const Text(
